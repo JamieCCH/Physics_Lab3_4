@@ -7,7 +7,7 @@ using UnityEngine;
 public class ProjectileComponent : MonoBehaviour {
 
     public Vector3 m_initialVelocity = Vector3.zero;
-    public float m_travelTime = 1.0f;
+    //public float m_travelTime = 1.0f;
     public Transform m_desiredDestination = null;
     public GameObject projectilePrefab;
 
@@ -20,31 +20,32 @@ public class ProjectileComponent : MonoBehaviour {
     }
 
     public float verticalAngle = 30.0f;
-    public float horizontalAngle = 5.0f;
+    public float horizontalAngle = 0.0f;
+
     public float initialVelocity = 50.0f;
 
     const float minHorizontalAngle = -35.0f;
     const float maxHorizontalAngle = 35.0f;
-    const float maxVerticalAngle = 90.0f;
-    const float minVerticalAngle = 0.0f;
+    const float maxVerticalAngle = 89.0f;
+    const float minVerticalAngle = 1.0f;
 
-    private float maxForce;
-    private float minForce = 1.0f;
+    const float maxVelocity = 50.0f;
+    const float minVelocity = 1.0f;
 
-    private float inputForce;
+    public float inputForce = 50.0f;
 
-    void Start () {
+    void Start () 
+    {
         m_rb = GetComponent<Rigidbody>();
         m_landingDisplay = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         m_landingDisplay.transform.position = new Vector3(0.0f, 0.0f, 0.0f);
-        m_landingDisplay.transform.localScale = new Vector3(1.0f, 0.1f, 1.0f);
+        m_landingDisplay.transform.localScale = new Vector3(1.0f, 0.3f, 1.0f);
         m_landingDisplay.GetComponent<Renderer>().material.color = Color.blue;
         m_landingDisplay.GetComponent<Collider>().enabled = false;
         m_landingDisplay.GetComponent<Renderer>().enabled = false;
 
-        maxForce = CalculateMaxVi().magnitude;
+        //Debug.Log("CalculateMaxVi: " + CalculateMaxVi());
 
-        print(maxForce);
     }
 
     public void Launch()
@@ -54,16 +55,16 @@ public class ProjectileComponent : MonoBehaviour {
             return;
         }
 
-       
-        m_landingDisplay.transform.position = transform.position + CalculateMaxVi();
+        m_landingDisplay.transform.position = DisplayLandingSpot();
         m_landingDisplay.GetComponent<Renderer>().enabled = true;
         m_isGrounded = false;
         GetComponent<Renderer>().enabled = false;
 
-        inputForce = maxForce;
-
         GameObject ball = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        Vector3 v = GetTrajectoryEnd();
+        v.y = GetLandingPosition().y;
         ball.GetComponent<Rigidbody>().velocity = GetLandingPosition() * inputForce;
+        Debug.Log("max velocity: " + ball.GetComponent<Rigidbody>().velocity);
     }
 
 
@@ -90,8 +91,22 @@ public class ProjectileComponent : MonoBehaviour {
     }
 
 
-   public Vector3 GetTrajectoryEnd(){
 
+    Vector3 GetLandingPosition()
+    {
+        float vertAngleRad = Mathf.Deg2Rad * verticalAngle;
+        float hozAngleRad = Mathf.Deg2Rad * horizontalAngle;
+        float dh = ((-2 * initialVelocity * initialVelocity * Mathf.Sin(vertAngleRad) * Mathf.Cos(vertAngleRad)) / Physics.gravity.y);
+
+        Vector3 landingPosition = new Vector3(Mathf.Sin(hozAngleRad), Mathf.Sin(vertAngleRad), Mathf.Cos(hozAngleRad));
+
+        //print("trajectory: " + GetTrajectoryEnd()); 
+        print("landingPosition: " + landingPosition);
+        return landingPosition;
+    }
+
+    public Vector3 GetTrajectoryEnd()
+    {
         float vertAngleRad = Mathf.Deg2Rad * verticalAngle;
         float dh = ((-2 * initialVelocity * initialVelocity * Mathf.Sin(vertAngleRad) * Mathf.Cos(vertAngleRad)) / Physics.gravity.y);
         float hozAngleRad = Mathf.Deg2Rad * horizontalAngle;
@@ -100,49 +115,31 @@ public class ProjectileComponent : MonoBehaviour {
         return destination;
     }
 
-
-    Vector3 GetLandingPosition()
+    public float GetMaxSpeed()
     {
-
         float vertAngleRad = Mathf.Deg2Rad * verticalAngle;
-        float hozAngleRad = Mathf.Deg2Rad * horizontalAngle;
- 
-        Vector3 landingPosition = new Vector3(Mathf.Sin(hozAngleRad), Mathf.Sin(vertAngleRad), Mathf.Cos(hozAngleRad));
 
-        Debug.Log(landingPosition.magnitude*inputForce);
+        Vector3 direction = GetTrajectoryEnd()- transform.position;
+        float yOffset = -direction.y;
+        float d = direction.magnitude;
+        float speed = (d * Mathf.Sqrt(Physics.gravity.magnitude) * Mathf.Sqrt(1 / Mathf.Cos(vertAngleRad))) / Mathf.Sqrt(2 * d * Mathf.Sin(vertAngleRad) + 2 * yOffset * Mathf.Cos(vertAngleRad));
 
-        return landingPosition;
+        Debug.Log("speed: "+speed); //50
+        return speed;
     }
 
+    public Vector3 DisplayLandingSpot(){
 
-    Vector3 CalculateMaxVi(){
-        //d = Vit + 0.5g(t^2)
-        //vi = (d - 0.5g(t^2))/t
-        Vector3 d = m_desiredDestination.position - transform.position;
-        float t = 2.5f;
-        Vector3 vi = (d - (0.5f * Physics.gravity * Mathf.Sqrt(t))) / t;
-        vi.y = 0;
+        float yOffset = GetLandingPosition().y * GetMaxSpeed();
+        float time = (0.0f - yOffset) / Physics.gravity.y;
+            time *= 2.0f;
+        Vector3 flatVelocity = GetLandingPosition()* GetMaxSpeed();
+            flatVelocity.y = 0.0f;
+            flatVelocity *= time;
 
-        return vi;
+            return transform.position + flatVelocity; 
     }
 
-    //Vector3 GetLandingPosition()
-    //{
-    //    //d = Vit + 0.5at^2
-
-    //    //vf = vi + at
-    //    //vf - vi = at
-    //    //(vf - vi)/a = t
-
-    //    float time = (0.0f - m_initialVelocity.y) / Physics.gravity.y;
-    //    time *= 2.0f;
-    //    //zero out y component and multiply vector by time
-    //    Vector3 flatVelocity = m_initialVelocity;
-    //    flatVelocity.y = 0.0f;
-    //    flatVelocity *= time;
-
-    //    return transform.position + flatVelocity; 
-    //}
 
 
 }

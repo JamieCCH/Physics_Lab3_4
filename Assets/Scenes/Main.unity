@@ -282,7 +282,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 534669902}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.1, y: 5.3, z: -94.2}
+  m_LocalPosition: {x: -1.1, y: 5.3, z: -145.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -455,7 +455,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 682672779}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.7, y: 0.5, z: -83.9}
+  m_LocalPosition: {x: -3.7, y: 0.5, z: -135.20001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1894805244}
@@ -474,13 +474,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_initialVelocity: {x: 0, y: 0, z: 0}
-  m_travelTime: 1
   m_desiredDestination: {fileID: 108856547}
   projectilePrefab: {fileID: 1694452598621952, guid: d933740c379f34dac81e40cce6481481,
     type: 2}
   verticalAngle: 30
   horizontalAngle: 5
   initialVelocity: 50
+  inputForce: 50
 --- !u!114 &682672785
 MonoBehaviour:
   m_ObjectHideFlags: 0
